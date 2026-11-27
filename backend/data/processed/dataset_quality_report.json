@@ -1,0 +1,60 @@
+{
+  "dataset_version": "3.0.0",
+  "generated_at": "2026-11-27T10:25:42.905528+00:00",
+  "url_quality": {
+    "source_rows": 306208,
+    "dropped_missing": 0,
+    "dropped_invalid_label": 1,
+    "exact_duplicates_removed": 3670,
+    "normalized_duplicates_removed": 2311,
+    "conflicting_label_groups": 1,
+    "conflicting_rows_removed": 2,
+    "cleaned_rows": 300224,
+    "class_distribution_before": {
+      "Legitimate": 127574,
+      "Phishing": 178633
+    },
+    "class_distribution_after": {
+      "Legitimate": 127330,
+      "Phishing": 172894
+    }
+  },
+  "phreshphish_time_holdout_quality": {
+    "source_rows": 67705,
+    "dropped_missing": 0,
+    "dropped_invalid_label": 0,
+    "exact_duplicates_removed": 0,
+    "normalized_duplicates_removed": 25,
+    "conflicting_label_groups": 0,
+    "conflicting_rows_removed": 0,
+    "cleaned_rows": 67680,
+    "class_distribution_before": {
+      "Legitimate": 36678,
+      "Phishing": 31027
+    },
+    "class_distribution_after": {
+      "Legitimate": 36678,
+      "Phishing": 31002
+    }
+  },
+  "message_quality": {
+    "source_rows": 21736,
+    "dropped_missing": 0,
+    "dropped_invalid_label": 0,
+    "exact_duplicates_removed": 11495,
+    "normalized_duplicates_removed": 365,
+    "conflicting_label_groups": 302,
+    "conflicting_rows_removed": 772,
+    "cleaned_rows": 9104,
+    "class_distribution_before": {
+      "Legitimate": 13068,
+      "Phishing": 4035,
+      "Spam": 4633
+    },
+    "class_distribution_after": {
+      "Legitimate": 5041,
+      "Phishing": 2218,
+      "Spam": 1845
+    }
+  }
+}

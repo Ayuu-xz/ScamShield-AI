@@ -26,6 +26,7 @@ import {
   RiskScoreDisplay,
   StatusBadge,
 } from './ui/StatusPrimitives.jsx'
+import GeminiExplanationSection from './GeminiExplanationSection.jsx'
 import { downloadScanReport } from '../services/api.js'
 
 const LANG_OPTIONS = [
@@ -288,16 +289,23 @@ export default function DetectionResultCard({
 
       {/* OCR Extracted Text Review */}
       {isImageResult && (
-        <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
+        <div className="space-y-2.5 rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-semibold text-[#F1F5F9]">
-              OCR Extracted Text
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-[#F1F5F9]">OCR Extracted Text</span>
+              <span className="rounded border border-[#263449] bg-[#111C30] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#93C5FD]">
+                {scanResult.extractedText ? 'OCR Completed' : 'No Text Detected'}
+              </span>
               {scanResult.ocrConfidence !== null && (
-                <span className="ml-2 font-normal text-[#94A3B8]">
+                <span className="font-normal text-[#94A3B8]">
                   ({Math.round(scanResult.ocrConfidence * 100)}% confidence)
                 </span>
               )}
-            </span>
+              <span className="text-[11px] text-[#94A3B8]">
+                {scanResult.detectedUrls.length}{' '}
+                {scanResult.detectedUrls.length === 1 ? 'URL' : 'URLs'} detected
+              </span>
+            </div>
             {scanResult.extractedText && onReviewExtractedText && (
               <button
                 type="button"
@@ -309,9 +317,83 @@ export default function DetectionResultCard({
               </button>
             )}
           </div>
-          <p className="mt-1.5 whitespace-pre-wrap break-words font-mono text-[11px] text-[#94A3B8]">
+          {scanResult.lowOcrConfidenceWarning && (
+            <p className="rounded border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-2.5 py-1.5 text-[11px] text-[#FCD34D]">
+              {scanResult.lowOcrConfidenceWarning}
+            </p>
+          )}
+          <p className="whitespace-pre-wrap break-words rounded border border-[#263449]/70 bg-[#111C30] p-2.5 font-mono text-[11px] text-[#CBD5E1]">
             {scanResult.extractedText || 'No readable text was detected in the uploaded image.'}
           </p>
+          {scanResult.detectedUrls.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-semibold text-[#F1F5F9]">
+                Detected URLs ({scanResult.detectedUrls.length})
+              </p>
+              <ul className="space-y-1">
+                {(scanResult.urlResults.length > 0
+                  ? scanResult.urlResults
+                  : scanResult.detectedUrls.map((u) => ({ url: u }))
+                ).map((item, idx) => (
+                  <li
+                    key={`${item.url}-${idx}`}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded border border-[#263449] bg-[#111C30] px-2.5 py-1.5 font-mono text-[11px] text-[#93C5FD]"
+                  >
+                    <span className="break-all">{item.url}</span>
+                    {typeof item.risk_score === 'number' && (
+                      <span className="text-[10px] font-sans font-semibold text-[#94A3B8]">
+                        {item.risk_score}/100 ({item.risk_level})
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-[11px] text-[#94A3B8]">
+              No URL detected. URL-based risk assessment is unavailable. Please review the extracted
+              text or enter the URL manually.
+            </p>
+          )}
+          {scanResult.suggestedUrlCandidates?.length > 0 && (
+            <div className="rounded border border-[#F59E0B]/30 bg-[#F59E0B]/10 p-2.5 text-[11px] text-[#FCD34D]">
+              <p className="font-semibold">Possible OCR URL Corrections (Review Only):</p>
+              <ul className="mt-1 space-y-1 font-mono">
+                {scanResult.suggestedUrlCandidates.map((cand, idx) => (
+                  <li key={`${cand.original}-${idx}`}>
+                    {cand.original} → <span className="underline">{cand.suggested}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Detected URLs Summary for Typed Messages */}
+      {!isImageResult && scanResult.scanType === 'message' && scanResult.detectedUrls.length > 0 && (
+        <div className="space-y-1.5 rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
+          <p className="font-semibold text-[#F1F5F9]">
+            Detected URLs ({scanResult.detectedUrls.length})
+          </p>
+          <ul className="space-y-1">
+            {(scanResult.urlResults.length > 0
+              ? scanResult.urlResults
+              : scanResult.detectedUrls.map((u) => ({ url: u }))
+            ).map((item, idx) => (
+              <li
+                key={`${item.url}-${idx}`}
+                className="flex flex-wrap items-center justify-between gap-2 rounded border border-[#263449] bg-[#111C30] px-2.5 py-1.5 font-mono text-[11px] text-[#93C5FD]"
+              >
+                <span className="break-all">{item.url}</span>
+                {typeof item.risk_score === 'number' && (
+                  <span className="text-[10px] font-sans font-semibold text-[#94A3B8]">
+                    {item.risk_score}/100 ({item.risk_level})
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -361,6 +443,13 @@ export default function DetectionResultCard({
           </ul>
         </div>
       </div>
+
+      {/* Gemini AI Explanation + TTS Audio */}
+      <GeminiExplanationSection
+        scanResult={scanResult}
+        selectedLang={selectedLang}
+        onSelectLang={setSelectedLang}
+      />
 
       {/* Expandable Technical Details */}
       <div className="rounded-lg border border-[#263449] bg-[#0B1120]">

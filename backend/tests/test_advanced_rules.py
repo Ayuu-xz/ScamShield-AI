@@ -94,7 +94,8 @@ def test_suspicious_redirect_parameter() -> None:
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["risk_score"] == 10
+    assert data["rule_score"] == 10
+    assert data["risk_score"] >= 10
     assert any(r["rule_id"] == "suspicious_redirect" for r in data["redirect_indicators"])
 
 

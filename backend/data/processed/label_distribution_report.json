@@ -1,0 +1,37 @@
+{
+  "url_splits": {
+    "train": {
+      "Phishing": 138315,
+      "Legitimate": 101864
+    },
+    "val": {
+      "Phishing": 17289,
+      "Legitimate": 12733
+    },
+    "test_unseen_domains": {
+      "Phishing": 17290,
+      "Legitimate": 12733
+    },
+    "test_phreshphish_time_unseen": {
+      "Legitimate": 17015,
+      "Phishing": 19592
+    }
+  },
+  "message_splits_real_world_only": {
+    "train": {
+      "Legitimate": 4033,
+      "Spam": 1476,
+      "Phishing": 1774
+    },
+    "val": {
+      "Spam": 184,
+      "Legitimate": 504,
+      "Phishing": 222
+    },
+    "test": {
+      "Spam": 185,
+      "Legitimate": 504,
+      "Phishing": 222
+    }
+  }
+}

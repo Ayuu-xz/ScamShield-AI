@@ -27,6 +27,8 @@ class OcrExtractionResult:
     extracted_text: str
     ocr_confidence: float | None
     low_confidence_warning: str | None
+    ocr_status: str = "completed"
+    ocr_warnings: tuple[str, ...] = ()
 
 
 _ocr_engine = None
@@ -111,6 +113,53 @@ def validate_and_load_image(
     return file_bytes
 
 
+def _parse_rapidocr_output(ocr_output) -> tuple[str, float | None]:
+    """Extract ordered text lines and mean confidence from RapidOCR output."""
+    if not ocr_output:
+        return "", None
+
+    lines: list[str] = []
+    confidences: list[float] = []
+    for item in ocr_output:
+        # RapidOCR returns [box, text, confidence]
+        if len(item) >= 2 and isinstance(item[1], str):
+            text_line = item[1].strip()
+            if text_line:
+                lines.append(text_line)
+        if len(item) >= 3:
+            try:
+                confidences.append(float(item[2]))
+            except (TypeError, ValueError):
+                pass
+
+    extracted_text = "\n".join(lines).strip()
+    mean_confidence = (
+        round(sum(confidences) / len(confidences), 4) if confidences else None
+    )
+    return extracted_text, mean_confidence
+
+
+def _prepare_image_variants(img, config: ImageUploadConfig):
+    """Apply EXIF orientation fix, safe upscaling for small screenshots, and contrast variants."""
+    from PIL import Image, ImageOps
+
+    oriented = ImageOps.exif_transpose(img).convert("RGB")
+    width, height = oriented.size
+    min_side = min(width, height)
+
+    # Upscale small screenshots/crops so URLs and small characters are legible to RapidOCR
+    if min_side > 0 and min_side < 800:
+        scale = 2 if min_side >= 400 else 3
+        new_w = min(width * scale, config.max_dimension_px)
+        new_h = min(height * scale, config.max_dimension_px)
+        if new_w > width or new_h > height:
+            oriented = oriented.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+    gray_auto = ImageOps.autocontrast(ImageOps.grayscale(oriented)).convert("RGB")
+    inverted_auto = ImageOps.invert(ImageOps.autocontrast(ImageOps.grayscale(oriented))).convert("RGB")
+    return oriented, gray_auto, inverted_auto
+
+
 def extract_text_from_image(
     file_bytes: bytes,
     config: ImageUploadConfig = settings.image_config,
@@ -123,48 +172,49 @@ def extract_text_from_image(
         import numpy as np
 
         with Image.open(io.BytesIO(file_bytes)) as img:
-            rgb_img = img.convert("RGB")
-            img_array = np.array(rgb_img)
+            primary_img, contrast_img, inverted_img = _prepare_image_variants(img, config)
 
-        ocr_output, _ = engine(img_array)
+        primary_out, _ = engine(np.array(primary_img))
+        best_text, best_conf = _parse_rapidocr_output(primary_out)
+
+        # Fallback passes only if primary pass found no text or had low confidence
+        if not best_text or (best_conf is not None and best_conf < 0.7):
+            for variant in (contrast_img, inverted_img):
+                alt_out, _ = engine(np.array(variant))
+                alt_text, alt_conf = _parse_rapidocr_output(alt_out)
+                if alt_text and (
+                    not best_text
+                    or (len(alt_text) > len(best_text) and (alt_conf or 0.0) >= (best_conf or 0.0) - 0.05)
+                    or ((alt_conf or 0.0) > (best_conf or 0.0) + 0.08)
+                ):
+                    best_text, best_conf = alt_text, alt_conf
     except OcrUnavailableError:
         raise
     except Exception as exc:
         raise OcrUnavailableError("OCR processing failed for the uploaded image.") from exc
 
-    if not ocr_output:
+    if not best_text:
         return OcrExtractionResult(
             extracted_text="",
             ocr_confidence=None,
             low_confidence_warning=None,
+            ocr_status="no_text",
+            ocr_warnings=("No readable text was detected in the uploaded image.",),
         )
 
-    lines: list[str] = []
-    confidences: list[float] = []
-    for item in ocr_output:
-        # RapidOCR returns [box, text, confidence]
-        if len(item) >= 2 and isinstance(item[1], str):
-            lines.append(item[1])
-        if len(item) >= 3:
-            try:
-                confidences.append(float(item[2]))
-            except (TypeError, ValueError):
-                pass
-
-    extracted_text = "\n".join(lines).strip()
-    mean_confidence = (
-        round(sum(confidences) / len(confidences), 4) if confidences else None
-    )
-
+    warnings: list[str] = []
     low_warning = None
-    if mean_confidence is not None and mean_confidence < config.low_confidence_threshold:
+    if best_conf is not None and best_conf < config.low_confidence_threshold:
         low_warning = (
-            f"OCR confidence is low ({int(mean_confidence * 100)}%). "
+            f"OCR confidence is low ({int(best_conf * 100)}%). "
             "Extracted text or URLs may be incomplete or inaccurate—please review carefully."
         )
+        warnings.append(low_warning)
 
     return OcrExtractionResult(
-        extracted_text=extracted_text,
-        ocr_confidence=mean_confidence,
+        extracted_text=best_text,
+        ocr_confidence=best_conf,
         low_confidence_warning=low_warning,
+        ocr_status="completed",
+        ocr_warnings=tuple(warnings),
     )

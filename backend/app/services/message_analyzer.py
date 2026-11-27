@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 
 from app.core.config import MessageAnalyzerConfig, ThreatIntelConfig, settings
 from app.ml.predictor import predict_url_ml
-from app.schemas.scan import DomainIntelligenceSchema, RuleFindingSchema, UrlScanItem
+from app.schemas.scan import (
+    DomainIntelligenceSchema,
+    RuleFindingSchema,
+    SuggestedUrlCandidateSchema,
+    UrlScanItem,
+)
 from app.services.indicators import RuleFinding
 from app.services.risk_scorer import classify_risk_score, score_indicators
 from app.services.rules.threat_intel_service import ThreatIntelResult
 from app.services.url_analyzer import analyze_url_full
+from app.services.url_extractor import extract_urls_from_text
 from app.services.website_inspector import InspectionOutcome
-
-_URL_IN_TEXT_RE = re.compile(
-    r"(?:https?://|www\.)[^\s<>\"'{}\\|^`\[\]]+",
-    re.IGNORECASE,
-)
 
 
 def to_rule_schema(finding: RuleFinding) -> RuleFindingSchema:
@@ -76,27 +76,19 @@ class MessageUrlAnalysisResult:
     explanations: list[str]
     recommendations: list[str]
     limitations: list[str]
+    suggested_url_candidates: list[SuggestedUrlCandidateSchema] = field(default_factory=list)
 
 
 def extract_urls_from_message(raw_message: str) -> list[str]:
     """Extract and deduplicate URLs from message text while preserving order."""
-    matches = _URL_IN_TEXT_RE.findall(raw_message)
-    seen: set[str] = set()
-    unique_urls: list[str] = []
-
-    for match in matches:
-        trimmed = match.rstrip(".,!?;:)\"'")
-        if trimmed and trimmed not in seen:
-            seen.add(trimmed)
-            unique_urls.append(trimmed)
-
-    return unique_urls
+    return extract_urls_from_text(raw_message, source="message").detected_urls
 
 
 def analyze_message_urls(
     raw_message: str,
     *,
     inspect_website: bool = False,
+    source: str = "message",
     config: MessageAnalyzerConfig = settings.message_config,
     provider_fn: Callable[[str, str, ThreatIntelConfig], ThreatIntelResult] | None = None,
     inspector_fn: Callable[[str], InspectionOutcome] | None = None,
@@ -114,14 +106,23 @@ def analyze_message_urls(
             f"Message exceeds maximum allowed length of {config.max_message_length} characters."
         )
 
-    detected_urls = extract_urls_from_message(cleaned)
+    extraction = extract_urls_from_text(cleaned, source=source)
+    detected_urls = extraction.detected_urls
+    suggested_candidates = [
+        SuggestedUrlCandidateSchema(
+            original=c.original,
+            suggested=c.suggested,
+            reason=c.reason,
+        )
+        for c in extraction.suggested_candidates
+    ]
 
     if not detected_urls:
         return MessageUrlAnalysisResult(
             status="no_url_detected",
             explanation=(
-                "No URL detected — URL-based risk assessment unavailable. "
-                "Non-URL scam detection is currently not included in this URL-first mode."
+                "No URL detected. URL-based risk assessment is unavailable. "
+                "Please review the extracted text or enter the URL manually."
             ),
             detected_urls=[],
             url_results=[],
@@ -322,4 +323,5 @@ def analyze_message_urls(
         explanations=list(dict.fromkeys(all_explanations)),
         recommendations=list(dict.fromkeys(all_recommendations)),
         limitations=list(dict.fromkeys(all_limitations)),
+        suggested_url_candidates=suggested_candidates,
     )

@@ -149,6 +149,14 @@ class UrlScanItem(BaseModel):
     error: str | None = None
 
 
+class SuggestedUrlCandidateSchema(BaseModel):
+    """Conservative OCR ambiguity candidate shown separately for user review."""
+
+    original: str
+    suggested: str
+    reason: str
+
+
 class LocalizedExplanationSchema(BaseModel):
     """Localized explanation bundle for a single language (en, hi, hinglish)."""
 
@@ -194,5 +202,8 @@ class ScanResponse(BaseModel):
     overall_risk_level: AssessmentLevel | None = None
     ocr_confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     low_ocr_confidence_warning: str | None = None
+    ocr_status: str | None = None
+    ocr_warnings: list[str] = []
+    suggested_url_candidates: list[SuggestedUrlCandidateSchema] = []
     status: str = "completed"
     explanation: str | None = None

@@ -1,0 +1,9 @@
+text,label,source
+"Aapka Bank khata band ho jayega, turant KYC update kare: http://bit.ly/verify-now",Phishing,synthetic_hinglish_scam
+"Aapne lottery mein Rs 50,000 jeete hai! Claim karne ke liye Rs 499 processing fee bheje.",Scam,synthetic_hinglish_scam
+"Ghar baithe kamaye $5,000 daily! Registration fee $25 bhej kar apna slot book kare.",Scam,synthetic_hinglish_scam
+"Congratulations! You won a cash prize of $10,000. Pay registration fee $25 to claim.",Scam,synthetic_hinglish_scam
+"Work from home and earn $5,000 per day! Pay $15 joining fee to start today.",Scam,synthetic_hinglish_scam
+"Urgent: share your OTP to receive cashback of Rs 50,000 in your account.",Scam,synthetic_hinglish_scam
+"Kal subah 9 baje meeting hai, time pe aa jana.",Legitimate,synthetic_hinglish_scam
+"Hi team, our weekly standup is moved to 3 PM in Room B.",Legitimate,synthetic_hinglish_scam

@@ -25,7 +25,7 @@ def test_ml_predict_url_endpoint_legit_and_phishing() -> None:
     legit = legit_res.json()
     assert legit["available"] is True
     assert legit["prediction"] in {"Legitimate", "Phishing"}
-    assert legit["model_version"] == "url-ml-v2.0.0"
+    assert legit["model_version"] == "url-ml-v3.0.0"
     assert legit["calibrated"] is True
     assert 0.0 <= legit["confidence"] <= 1.0
 
@@ -48,7 +48,7 @@ def test_ml_predict_message_endpoint_classes() -> None:
     ).json()
     assert legit["available"] is True
     assert legit["prediction"] == "Legitimate"
-    assert legit["model_version"] == "message-ml-v2.0.0"
+    assert legit["model_version"] == "message-ml-v3.0.0"
 
     phish = client.post(
         "/api/ml/predict/message",

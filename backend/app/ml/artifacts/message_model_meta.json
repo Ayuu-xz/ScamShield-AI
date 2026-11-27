@@ -1,157 +1,130 @@
 {
-  "model_version": "message-ml-v2.0.0",
-  "selected_model": "random_forest",
-  "dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v2",
-  "trained_at": "2026-11-27T09:28:35.309082+00:00",
+  "model_version": "message-ml-v3.0.0",
+  "selected_model": "logistic_regression",
+  "dataset": "uci_sms_plus_mendeley_10191_plus_mishra_soni_5971_v3",
+  "training_started_at": "2026-11-27T10:26:40.725790+00:00",
+  "trained_at": "2026-11-27T10:27:11.079548+00:00",
   "random_seed": 42,
   "calibrated_probabilities": true,
+  "resource_usage": {
+    "peak_or_end_rss_mb": 225.6,
+    "process_cpu_percent": 145.6
+  },
   "classes": [
     "Legitimate",
     "Phishing",
-    "Scam",
     "Spam"
   ],
   "splits": {
-    "train": 4464,
-    "val": 447,
-    "test": 446
+    "train": 7283,
+    "val": 910,
+    "test": 911
   },
   "validation_comparison": {
     "logistic_regression": {
-      "macro_precision": 0.941,
-      "macro_f1": 0.962,
-      "macro_recall": 0.9861
+      "training_duration_seconds": 10.93,
+      "macro_precision": 0.9809,
+      "macro_f1": 0.9798,
+      "macro_recall": 0.9789
     },
     "random_forest": {
-      "macro_precision": 0.9795,
-      "macro_f1": 0.9697,
-      "macro_recall": 0.961
+      "training_duration_seconds": 11.04,
+      "macro_precision": 0.9755,
+      "macro_f1": 0.9713,
+      "macro_recall": 0.9674
     }
   },
   "test_metrics": {
-    "accuracy": 0.9641,
-    "macro_precision": 0.9597,
-    "macro_recall": 0.9529,
-    "macro_f1": 0.9562,
-    "weighted_f1": 0.9638,
-    "log_loss": 0.1119,
-    "roc_auc_ovr_weighted": 0.975,
+    "support": 911,
+    "accuracy": 0.9737,
+    "macro_precision": 0.9637,
+    "macro_recall": 0.962,
+    "macro_f1": 0.9628,
+    "weighted_f1": 0.9736,
+    "log_loss": 0.0906,
+    "roc_auc_ovr_weighted": 0.9962,
+    "inference_latency_ms_per_sample": 1.8107,
     "confusion_matrix": {
       "labels": [
         "Legitimate",
         "Phishing",
-        "Scam",
         "Spam"
       ],
       "matrix": [
         [
-          370,
-          0,
-          0,
-          7
-        ],
-        [
-          0,
-          12,
-          0,
+          502,
+          2,
           0
         ],
         [
-          0,
-          0,
-          4,
-          0
+          1,
+          212,
+          9
         ],
         [
-          9,
-          0,
-          0,
-          44
+          2,
+          10,
+          173
         ]
       ]
     }
   },
   "classification_report": {
     "Legitimate": {
-      "precision": 0.9762532981530343,
-      "recall": 0.9814323607427056,
-      "f1-score": 0.9788359788359788,
-      "support": 377.0
+      "precision": 0.994059405940594,
+      "recall": 0.996031746031746,
+      "f1-score": 0.9950445986124876,
+      "support": 504.0
     },
     "Phishing": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 12.0
-    },
-    "Scam": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 4.0
+      "precision": 0.9464285714285714,
+      "recall": 0.954954954954955,
+      "f1-score": 0.9506726457399103,
+      "support": 222.0
     },
     "Spam": {
-      "precision": 0.8627450980392157,
-      "recall": 0.8301886792452831,
-      "f1-score": 0.8461538461538461,
-      "support": 53.0
+      "precision": 0.9505494505494505,
+      "recall": 0.9351351351351351,
+      "f1-score": 0.9427792915531336,
+      "support": 185.0
     },
-    "accuracy": 0.9641255605381166,
+    "accuracy": 0.973655323819978,
     "macro avg": {
-      "precision": 0.9597495990480626,
-      "recall": 0.9529052599969972,
-      "f1-score": 0.9562474562474562,
-      "support": 446.0
+      "precision": 0.9636791426395387,
+      "recall": 0.962040612040612,
+      "f1-score": 0.9628321786351771,
+      "support": 911.0
     },
     "weighted avg": {
-      "precision": 0.9636165551564403,
-      "recall": 0.9641255605381166,
-      "f1-score": 0.9638280669670805,
-      "support": 446.0
+      "precision": 0.9736166101019216,
+      "recall": 0.973655323819978,
+      "f1-score": 0.9736179736468534,
+      "support": 911.0
+    }
+  },
+  "source_level_test_metrics": {
+    "mendeley_10191": {
+      "support": 404,
+      "accuracy": 0.9604,
+      "macro_f1": 0.9694
+    },
+    "mendeley_5971": {
+      "support": 31,
+      "accuracy": 0.871,
+      "macro_f1": 0.8389
+    },
+    "uci_sms": {
+      "support": 476,
+      "accuracy": 0.9916,
+      "macro_f1": 0.6491
     }
   },
   "baseline_comparison": {
-    "baseline_version": "message-ml-v1.0.0",
-    "baseline_dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v1",
-    "baseline_test_metrics": {
-      "macro_precision": 0.9695,
-      "macro_recall": 0.9717,
-      "macro_f1": 0.9704,
-      "weighted_f1": 0.9799,
-      "confusion_matrix": {
-        "labels": [
-          "Legitimate",
-          "Phishing",
-          "Scam",
-          "Spam"
-        ],
-        "matrix": [
-          [
-            673,
-            0,
-            0,
-            6
-          ],
-          [
-            0,
-            22,
-            0,
-            0
-          ],
-          [
-            0,
-            0,
-            7,
-            0
-          ],
-          [
-            9,
-            1,
-            0,
-            86
-          ]
-        ]
-      }
-    }
+    "baseline_version": "message-ml-v2.0.0",
+    "v2_on_new_real_world_test_accuracy": 0.7355,
+    "v2_on_new_real_world_test_weighted_f1": 0.6656,
+    "v3_on_new_real_world_test_accuracy": 0.9737,
+    "v3_on_new_real_world_test_macro_f1": 0.9628,
+    "v3_on_new_real_world_test_weighted_f1": 0.9736
   }
 }

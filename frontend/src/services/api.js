@@ -145,6 +145,11 @@ export function normalizeScanResponse(raw, fallbackType = 'url') {
     ocrConfidence:
       typeof raw?.ocr_confidence === 'number' ? raw.ocr_confidence : null,
     lowOcrConfidenceWarning: raw?.low_ocr_confidence_warning ?? null,
+    ocrStatus: raw?.ocr_status ?? null,
+    ocrWarnings: Array.isArray(raw?.ocr_warnings) ? raw.ocr_warnings : [],
+    suggestedUrlCandidates: Array.isArray(raw?.suggested_url_candidates)
+      ? raw.suggested_url_candidates
+      : [],
     status: raw?.status || 'completed',
     explanation: raw?.explanation ?? null,
     scannedAt: new Date().toISOString(),
@@ -340,6 +345,71 @@ export async function fetchAnalytics({
     },
     'Failed to load analytics',
   )
+}
+
+/**
+ * Request an evidence-based Gemini explanation via POST /api/explanations/generate.
+ */
+export async function generateAiExplanation(scanResult, language = 'en') {
+  return requestJson(
+    `${API_BASE_URL}/api/explanations/generate`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        scan_type: scanResult.scanType || 'url',
+        risk_level: scanResult.riskLevel || 'Inspection unavailable',
+        risk_score: scanResult.riskScore ?? null,
+        detected_indicators: scanResult.detectedIndicators || [],
+        rule_explanations: scanResult.ruleExplanations || [],
+        ml_analysis: scanResult.mlAnalysis || null,
+        detected_urls: scanResult.detectedUrls || [],
+        reputation_status: scanResult.reputationStatus || 'Check unavailable',
+        domain_intelligence: scanResult.domainIntelligence || null,
+        inspection_status: scanResult.inspectionStatus || 'Check unavailable',
+        inspection_note: scanResult.inspectionNote || '',
+        ocr_confidence: scanResult.ocrConfidence ?? null,
+        language,
+      }),
+    },
+    'Failed to generate AI explanation',
+  )
+}
+
+/**
+ * Request Gemini TTS WAV audio for a server-validated explanation_id.
+ */
+export async function generateAiAudio(explanationId, language = 'en') {
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/explanations/audio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'audio/wav',
+      },
+      body: JSON.stringify({
+        explanation_id: explanationId,
+        language,
+      }),
+    })
+  } catch {
+    throw new Error('Unable to connect to the backend audio service.')
+  }
+
+  if (!response.ok) {
+    const message = await extractErrorMessage(response, 'Audio explanation unavailable')
+    throw new Error(message)
+  }
+
+  const blob = await response.blob()
+  if (!blob || blob.size === 0) {
+    throw new Error('Received empty audio response.')
+  }
+  return blob
 }
 
 /**

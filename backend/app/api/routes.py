@@ -11,6 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.database import get_db
 from app.ml.predictor import MLPredictionResult, predict_message_ml, predict_url_ml
+from app.schemas.explanations import (
+    GeminiAudioRequest,
+    GeminiExplanationRequest,
+    GeminiExplanationResponse,
+)
 from app.schemas.health import HealthResponse
 from app.schemas.history import (
     AnalyticsResponse,
@@ -32,6 +37,12 @@ from app.schemas.scan import (
 )
 from app.services.analytics_service import compute_analytics
 from app.services.explanation_service import generate_multilingual_explanations
+from app.services.gemini_explanation_service import generate_gemini_explanation
+from app.services.gemini_tts_service import (
+    ExplanationNotFoundError,
+    TtsUnavailableError,
+    generate_explanation_audio,
+)
 from app.services.history_service import (
     clear_scan_history,
     delete_scan_history_by_id,
@@ -430,6 +441,8 @@ async def scan_message_image(
             overall_risk_level="Unavailable",
             ocr_confidence=ocr_result.ocr_confidence,
             low_ocr_confidence_warning=ocr_result.low_confidence_warning,
+            ocr_status=ocr_result.ocr_status,
+            ocr_warnings=list(ocr_result.ocr_warnings),
             status="no_url_detected",
             explanation=(
                 "No readable text or URLs were detected in the uploaded image. "
@@ -444,6 +457,7 @@ async def scan_message_image(
     analysis = analyze_message_urls(
         ocr_text_for_scan,
         inspect_website=inspect_website,
+        source="ocr",
     )
 
     ml_msg_pred = predict_message_ml(ocr_text_for_scan)
@@ -522,6 +536,9 @@ async def scan_message_image(
         overall_risk_level=analysis.overall_risk_level,
         ocr_confidence=ocr_result.ocr_confidence,
         low_ocr_confidence_warning=ocr_result.low_confidence_warning,
+        ocr_status=ocr_result.ocr_status,
+        ocr_warnings=list(ocr_result.ocr_warnings),
+        suggested_url_candidates=analysis.suggested_url_candidates,
         status=analysis.status,
         explanation=analysis.explanation,
         disclaimer=(
@@ -796,4 +813,43 @@ def delete_all_history(db: Session = Depends(get_db)) -> HistoryClearResponse:
         success=True,
         message="All scan history cleared.",
         deleted_count=deleted_count,
+    )
+
+
+@router.post(
+    "/explanations/generate",
+    response_model=GeminiExplanationResponse,
+    summary="Generate an evidence-based Gemini explanation for a completed scan",
+)
+def generate_ai_explanation(payload: GeminiExplanationRequest) -> GeminiExplanationResponse:
+    """Explain completed scan evidence in English, Hindi, or Hinglish via Gemini."""
+    return generate_gemini_explanation(payload)
+
+
+@router.post(
+    "/explanations/audio",
+    summary="Synthesize Gemini TTS audio for a validated explanation",
+)
+def generate_ai_explanation_audio(payload: GeminiAudioRequest) -> Response:
+    """Convert a server-validated Gemini explanation into WAV audio."""
+    try:
+        wav_bytes = generate_explanation_audio(
+            explanation_id=payload.explanation_id,
+            language=payload.language,
+        )
+    except ExplanationNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except TtsUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+
+    return Response(
+        content=wav_bytes,
+        media_type="audio/wav",
+        headers={"Content-Disposition": 'inline; filename="scamshield-explanation.wav"'},
     )

@@ -132,6 +132,31 @@ class MLConfig:
 
 
 @dataclass(frozen=True)
+class GeminiConfig:
+    """Configuration for optional Google Gemini explanation and TTS audio services."""
+
+    api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", "").strip())
+    text_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_TEXT_MODEL", "gemini-2.5-flash").strip()
+    )
+    tts_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_TTS_MODEL", "gemini-3.8-flash-lite-tts").strip()
+    )
+    tts_voice: str = field(
+        default_factory=lambda: os.getenv("GEMINI_TTS_VOICE", "Kore").strip()
+    )
+    timeout_seconds: float = field(
+        default_factory=lambda: float(os.getenv("GEMINI_TIMEOUT_SECONDS", "15.0"))
+    )
+    cache_ttl_seconds: int = field(
+        default_factory=lambda: int(os.getenv("GEMINI_CACHE_TTL_SECONDS", "600"))
+    )
+    max_requests_per_minute: int = field(
+        default_factory=lambda: int(os.getenv("GEMINI_MAX_REQUESTS_PER_MINUTE", "30"))
+    )
+
+
+@dataclass(frozen=True)
 class Settings:
     """Central settings for the ScamShield AI backend."""
 
@@ -154,6 +179,7 @@ class Settings:
     threat_intel: ThreatIntelConfig = field(default_factory=ThreatIntelConfig)
     website_inspection: WebsiteInspectionConfig = field(default_factory=WebsiteInspectionConfig)
     ml_config: MLConfig = field(default_factory=MLConfig)
+    gemini: GeminiConfig = field(default_factory=GeminiConfig)
 
 
 settings = Settings()
