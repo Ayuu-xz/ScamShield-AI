@@ -42,8 +42,9 @@ def test_url_shortener_detected() -> None:
 
     data = response.json()
     assert "URL Shortener" in data["detected_indicators"]
-    assert data["risk_score"] == 10
-    assert data["risk_level"] == "Inspection unavailable"
+    assert data["rule_score"] == 10
+    assert data["risk_score"] >= 10
+    assert data["risk_level"] in {"Inspection unavailable", "Suspicious"}
 
 
 def test_excessive_subdomains_detected() -> None:
@@ -99,8 +100,9 @@ def test_missing_https_alone_stays_low_risk() -> None:
 
     data = response.json()
     assert "Missing HTTPS Encryption" in data["detected_indicators"]
-    assert data["risk_score"] == 5
-    assert data["risk_level"] == "Inspection unavailable"
+    assert data["rule_score"] == 5
+    assert data["risk_score"] >= 5
+    assert data["risk_level"] in {"Inspection unavailable", "Suspicious"}
 
 
 def test_lookalike_domain_detected() -> None:

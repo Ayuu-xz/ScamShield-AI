@@ -1,0 +1,128 @@
+{
+  "dataset_version": "2.0.0",
+  "generated_at": "2026-11-27T09:33:49.404543+00:00",
+  "random_seed": 42,
+  "url_datasets": {
+    "primary_training": {
+      "name": "LegitPhish Dataset",
+      "source": "https://data.mendeley.com/datasets/hx4m73v2sf/2",
+      "doi": "10.17632/hx4m73v2sf.2",
+      "license": "CC BY 4.0",
+      "download_status": "downloaded",
+      "local_raw_file": "data/raw/legitphish_urls.csv",
+      "label_mapping": {
+        "0": "Phishing",
+        "1": "Legitimate"
+      },
+      "stats": {
+        "source_rows": 100114,
+        "dropped_missing": 0,
+        "dropped_invalid_label": 0,
+        "exact_duplicates_removed": 1,
+        "normalized_duplicates_removed": 0,
+        "conflicting_label_groups": 0,
+        "conflicting_rows_removed": 0,
+        "cleaned_rows": 100113,
+        "class_distribution_before": {
+          "Legitimate": 37712,
+          "Phishing": 62402
+        },
+        "class_distribution_after": {
+          "Legitimate": 37711,
+          "Phishing": 62402
+        }
+      },
+      "splits": {
+        "train": 83427,
+        "val": 8343,
+        "test": 8343
+      }
+    },
+    "independent_benchmark": {
+      "name": "synthetic_defensive_urls_v1",
+      "source": "ml_training/prepare_datasets.py",
+      "license": "Internal project benchmark",
+      "download_status": "generated_locally",
+      "local_processed_file": "data/processed/urls/benchmark_synthetic.csv",
+      "stats": {
+        "source_rows": 1124,
+        "dropped_missing": 0,
+        "dropped_invalid_label": 0,
+        "exact_duplicates_removed": 0,
+        "normalized_duplicates_removed": 0,
+        "conflicting_label_groups": 0,
+        "conflicting_rows_removed": 0,
+        "cleaned_rows": 1124,
+        "class_distribution_before": {
+          "Legitimate": 336,
+          "Phishing": 788
+        },
+        "class_distribution_after": {
+          "Legitimate": 336,
+          "Phishing": 788
+        }
+      }
+    },
+    "optional_kaggle": {
+      "name": "Kaggle Phishing URL Features Dataset",
+      "source": "https://www.kaggle.com/elifzelik/phishing-url-features-dataset",
+      "license": "CC BY 4.0",
+      "download_status": "not_downloaded_kaggle_auth_required",
+      "compatibility_note": "Requires Kaggle authentication for download and provides precomputed HTML/DNS/WHOIS numerical features rather than raw URL strings; skipped from raw-URL production model training."
+    }
+  },
+  "message_datasets": {
+    "sources": [
+      {
+        "name": "UCI SMS Spam Collection",
+        "source": "https://archive.ics.uci.edu/dataset/228/sms+spam+collection",
+        "license": "CC BY 4.0",
+        "download_status": "downloaded",
+        "local_raw_file": "data/raw/SMSSpamCollection",
+        "label_mapping": {
+          "ham": "Legitimate",
+          "spam": "Spam"
+        }
+      },
+      {
+        "name": "ScamShield Synthetic Phishing & Scam (English + Hinglish)",
+        "source": "ml_training/prepare_datasets.py",
+        "license": "Internal project augmentation",
+        "download_status": "generated_locally"
+      }
+    ],
+    "stats": {
+      "source_rows": 5868,
+      "dropped_missing": 0,
+      "dropped_invalid_label": 0,
+      "exact_duplicates_removed": 510,
+      "normalized_duplicates_removed": 1,
+      "conflicting_label_groups": 0,
+      "conflicting_rows_removed": 0,
+      "cleaned_rows": 5357,
+      "class_distribution_before": {
+        "Legitimate": 4833,
+        "Phishing": 160,
+        "Scam": 128,
+        "Spam": 747
+      },
+      "class_distribution_after": {
+        "Legitimate": 4523,
+        "Phishing": 144,
+        "Scam": 48,
+        "Spam": 642
+      }
+    },
+    "splits": {
+      "train": 4464,
+      "val": 447,
+      "test": 446
+    }
+  },
+  "leakage_prevention": [
+    "Exact and normalized deduplication performed prior to splitting.",
+    "Conflicting-label groups removed prior to splitting.",
+    "StratifiedGroupKFold grouping by normalized hostname+path (URLs) and template skeleton (Messages).",
+    "TF-IDF vectorizers and StandardScaler fitted strictly on training split inside Pipeline."
+  ]
+}

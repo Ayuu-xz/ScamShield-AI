@@ -1,8 +1,8 @@
 {
-  "model_version": "message-ml-v1.0.0",
-  "selected_model": "logistic_regression",
-  "dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v1",
-  "trained_at": "2026-11-27T06:33:32.735478+00:00",
+  "model_version": "message-ml-v2.0.0",
+  "selected_model": "random_forest",
+  "dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v2",
+  "trained_at": "2026-11-27T09:28:35.309082+00:00",
   "random_seed": 42,
   "calibrated_probabilities": true,
   "classes": [
@@ -11,21 +11,31 @@
     "Scam",
     "Spam"
   ],
+  "splits": {
+    "train": 4464,
+    "val": 447,
+    "test": 446
+  },
   "validation_comparison": {
     "logistic_regression": {
-      "macro_f1": 0.9734,
-      "macro_recall": 0.979
+      "macro_precision": 0.941,
+      "macro_f1": 0.962,
+      "macro_recall": 0.9861
     },
     "random_forest": {
-      "macro_f1": 0.9687,
-      "macro_recall": 0.9764
+      "macro_precision": 0.9795,
+      "macro_f1": 0.9697,
+      "macro_recall": 0.961
     }
   },
   "test_metrics": {
-    "macro_precision": 0.9695,
-    "macro_recall": 0.9717,
-    "macro_f1": 0.9704,
-    "weighted_f1": 0.9799,
+    "accuracy": 0.9641,
+    "macro_precision": 0.9597,
+    "macro_recall": 0.9529,
+    "macro_f1": 0.9562,
+    "weighted_f1": 0.9638,
+    "log_loss": 0.1119,
+    "roc_auc_ovr_weighted": 0.975,
     "confusion_matrix": {
       "labels": [
         "Legitimate",
@@ -35,69 +45,113 @@
       ],
       "matrix": [
         [
-          673,
+          370,
           0,
           0,
-          6
+          7
         ],
         [
           0,
-          22,
+          12,
           0,
           0
         ],
         [
           0,
           0,
-          7,
+          4,
           0
         ],
         [
           9,
-          1,
           0,
-          86
+          0,
+          44
         ]
       ]
     }
   },
   "classification_report": {
     "Legitimate": {
-      "precision": 0.9868035190615836,
-      "recall": 0.9911634756995582,
-      "f1-score": 0.9889786921381337,
-      "support": 679.0
+      "precision": 0.9762532981530343,
+      "recall": 0.9814323607427056,
+      "f1-score": 0.9788359788359788,
+      "support": 377.0
     },
     "Phishing": {
-      "precision": 0.9565217391304348,
+      "precision": 1.0,
       "recall": 1.0,
-      "f1-score": 0.9777777777777777,
-      "support": 22.0
+      "f1-score": 1.0,
+      "support": 12.0
     },
     "Scam": {
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 7.0
+      "support": 4.0
     },
     "Spam": {
-      "precision": 0.9347826086956522,
-      "recall": 0.8958333333333334,
-      "f1-score": 0.9148936170212766,
-      "support": 96.0
+      "precision": 0.8627450980392157,
+      "recall": 0.8301886792452831,
+      "f1-score": 0.8461538461538461,
+      "support": 53.0
     },
-    "accuracy": 0.9800995024875622,
+    "accuracy": 0.9641255605381166,
     "macro avg": {
-      "precision": 0.9695269667219177,
-      "recall": 0.9717492022582229,
-      "f1-score": 0.970412521734297,
-      "support": 804.0
+      "precision": 0.9597495990480626,
+      "recall": 0.9529052599969972,
+      "f1-score": 0.9562474562474562,
+      "support": 446.0
     },
     "weighted avg": {
-      "precision": 0.9798783558936163,
-      "recall": 0.9800995024875622,
-      "f1-score": 0.9799221769986896,
-      "support": 804.0
+      "precision": 0.9636165551564403,
+      "recall": 0.9641255605381166,
+      "f1-score": 0.9638280669670805,
+      "support": 446.0
+    }
+  },
+  "baseline_comparison": {
+    "baseline_version": "message-ml-v1.0.0",
+    "baseline_dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v1",
+    "baseline_test_metrics": {
+      "macro_precision": 0.9695,
+      "macro_recall": 0.9717,
+      "macro_f1": 0.9704,
+      "weighted_f1": 0.9799,
+      "confusion_matrix": {
+        "labels": [
+          "Legitimate",
+          "Phishing",
+          "Scam",
+          "Spam"
+        ],
+        "matrix": [
+          [
+            673,
+            0,
+            0,
+            6
+          ],
+          [
+            0,
+            22,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            7,
+            0
+          ],
+          [
+            9,
+            1,
+            0,
+            86
+          ]
+        ]
+      }
     }
   }
 }

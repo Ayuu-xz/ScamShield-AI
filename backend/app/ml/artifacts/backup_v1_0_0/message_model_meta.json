@@ -1,0 +1,103 @@
+{
+  "model_version": "message-ml-v1.0.0",
+  "selected_model": "logistic_regression",
+  "dataset": "uci_sms_spam_collection_plus_synthetic_phishing_scam_v1",
+  "trained_at": "2026-11-27T06:33:32.735478+00:00",
+  "random_seed": 42,
+  "calibrated_probabilities": true,
+  "classes": [
+    "Legitimate",
+    "Phishing",
+    "Scam",
+    "Spam"
+  ],
+  "validation_comparison": {
+    "logistic_regression": {
+      "macro_f1": 0.9734,
+      "macro_recall": 0.979
+    },
+    "random_forest": {
+      "macro_f1": 0.9687,
+      "macro_recall": 0.9764
+    }
+  },
+  "test_metrics": {
+    "macro_precision": 0.9695,
+    "macro_recall": 0.9717,
+    "macro_f1": 0.9704,
+    "weighted_f1": 0.9799,
+    "confusion_matrix": {
+      "labels": [
+        "Legitimate",
+        "Phishing",
+        "Scam",
+        "Spam"
+      ],
+      "matrix": [
+        [
+          673,
+          0,
+          0,
+          6
+        ],
+        [
+          0,
+          22,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          7,
+          0
+        ],
+        [
+          9,
+          1,
+          0,
+          86
+        ]
+      ]
+    }
+  },
+  "classification_report": {
+    "Legitimate": {
+      "precision": 0.9868035190615836,
+      "recall": 0.9911634756995582,
+      "f1-score": 0.9889786921381337,
+      "support": 679.0
+    },
+    "Phishing": {
+      "precision": 0.9565217391304348,
+      "recall": 1.0,
+      "f1-score": 0.9777777777777777,
+      "support": 22.0
+    },
+    "Scam": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 7.0
+    },
+    "Spam": {
+      "precision": 0.9347826086956522,
+      "recall": 0.8958333333333334,
+      "f1-score": 0.9148936170212766,
+      "support": 96.0
+    },
+    "accuracy": 0.9800995024875622,
+    "macro avg": {
+      "precision": 0.9695269667219177,
+      "recall": 0.9717492022582229,
+      "f1-score": 0.970412521734297,
+      "support": 804.0
+    },
+    "weighted avg": {
+      "precision": 0.9798783558936163,
+      "recall": 0.9800995024875622,
+      "f1-score": 0.9799221769986896,
+      "support": 804.0
+    }
+  }
+}

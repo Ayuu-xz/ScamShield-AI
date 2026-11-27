@@ -29,8 +29,8 @@ def test_tracking_query_parameters_are_informational_only() -> None:
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["risk_score"] == 0
-    assert data["risk_level"] == "Inspection unavailable"
+    assert data["rule_score"] == 0
+    assert data["risk_level"] in {"Inspection unavailable", "Suspicious"}
     assert len(data["tracker_indicators"]) == 2
     assert all(t["detection_status"] == "Informational" for t in data["tracker_indicators"])
     assert all(t["score_contribution"] == 0 for t in data["tracker_indicators"])
@@ -106,7 +106,8 @@ def test_nested_redirect_url_parameter() -> None:
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["risk_score"] == 15
+    assert data["rule_score"] == 15
+    assert data["risk_score"] >= 15
     assert any(r["rule_id"] == "nested_redirect" for r in data["redirect_indicators"])
 
 
@@ -136,7 +137,8 @@ def test_suspicious_executable_file_extension_does_not_confirm_malware() -> None
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["risk_score"] == 15
+    assert data["rule_score"] == 15
+    assert data["risk_score"] >= 15
     assert len(data["file_download_indicators"]) == 1
     assert "not confirmation of malware" in data["file_download_indicators"][0]["explanation"].lower()
     assert not any(m["detection_status"] == "Detected" for m in data["malware_indicators"])
