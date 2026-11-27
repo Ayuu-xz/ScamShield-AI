@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: scamshield-api
+    runtime: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    disk:
+      name: scamshield-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: APP_NAME
+        value: ScamShield AI API
+      - key: APP_VERSION
+        value: 0.1.0
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: https://your-project.vercel.app
+      - key: DATABASE_URL
+        value: sqlite:////var/data/scamshield.db
+      - key: ML_ENABLED
+        value: "true"

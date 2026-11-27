@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScamShield AI</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="brand">
+          <img src="icons/icon48.png" alt="ScamShield AI" class="brand-icon" />
+          <div>
+            <h1 class="brand-title">ScamShield <span>AI</span></h1>
+            <p class="brand-sub">On-Demand URL Checker</p>
+          </div>
+        </div>
+        <span id="api-status" class="api-badge api-loading">Checking API...</span>
+      </header>
+
+      <!-- Current Website Section -->
+      <section class="card">
+        <div class="section-header">
+          <span class="label">Current Tab URL</span>
+        </div>
+        <p id="current-url" class="url-preview">Reading active tab...</p>
+        <button id="scan-current-btn" type="button" class="btn btn-primary">
+          Scan Current Website
+        </button>
+      </section>
+
+      <!-- Manual URL Scanner -->
+      <section class="card">
+        <label for="manual-url-input" class="label">Manual URL Scanner</label>
+        <form id="manual-form" class="manual-row" novalidate>
+          <input
+            id="manual-url-input"
+            type="text"
+            placeholder="https://example.com/login"
+            autocomplete="off"
+          />
+          <button id="scan-manual-btn" type="submit" class="btn btn-secondary">
+            Scan URL
+          </button>
+        </form>
+      </section>
+
+      <!-- Privacy Notice -->
+      <p class="privacy-note">
+        Privacy: Only the URL you choose to scan is sent as text. No browsing history,
+        cookies, passwords, or page contents are collected.
+      </p>
+
+      <!-- Loading State -->
+      <div id="loading-box" class="status-box loading-box hidden" role="status">
+        Analyzing URL text with ScamShield AI...
+      </div>
+
+      <!-- Error State -->
+      <div id="error-box" class="status-box error-box hidden" role="alert"></div>
+
+      <!-- Scan Result Section -->
+      <section id="result-card" class="card result-card hidden">
+        <div class="result-top">
+          <div>
+            <span class="label">Risk Score</span>
+            <div class="score-row">
+              <span id="score-value" class="score-value">0</span>
+              <span class="score-max">/ 100</span>
+            </div>
+          </div>
+          <span id="risk-badge" class="risk-badge">Inspection unavailable</span>
+        </div>
+
+        <div class="progress-track">
+          <div id="score-bar" class="progress-fill"></div>
+        </div>
+
+        <!-- Language Selector (Instant, no re-scan) -->
+        <div class="lang-bar" role="group" aria-label="Explanation language">
+          <span class="lang-label">Language:</span>
+          <button type="button" class="lang-btn active" data-lang="en">English</button>
+          <button type="button" class="lang-btn" data-lang="hi">हिंदी</button>
+          <button type="button" class="lang-btn" data-lang="hinglish">Hinglish</button>
+        </div>
+
+        <p id="summary-text" class="summary-text"></p>
+
+        <!-- Expandable Detection Details -->
+        <details id="details-panel" class="details-panel">
+          <summary>Detection Details &amp; Recommendations</summary>
+          <div class="details-body">
+            <div id="ml-box" class="ml-box hidden">
+              <strong>ML Prediction:</strong> <span id="ml-text"></span>
+            </div>
+            <div>
+              <h2 class="subhead">Detected Indicators</h2>
+              <ul id="indicators-list" class="list"></ul>
+            </div>
+            <div>
+              <h2 class="subhead">Recommendations</h2>
+              <ul id="recommendations-list" class="list"></ul>
+            </div>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <script type="module" src="src/popup.js"></script>
+  </body>
+</html>

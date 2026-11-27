@@ -1,0 +1,1 @@
+"""Modular detection rules package."""
