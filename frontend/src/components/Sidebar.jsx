@@ -4,8 +4,9 @@ import {
   MessageSquareWarning,
   History,
   BarChart3,
-  ShieldAlert,
-  BookOpen,
+  FileText,
+  Settings,
+  HelpCircle,
   ShieldCheck,
   X,
 } from 'lucide-react'
@@ -15,17 +16,19 @@ export const NAV_ITEMS = [
   { id: 'url-scanner', label: 'URL Scanner', icon: Link2 },
   { id: 'message-scanner', label: 'Message Scanner', icon: MessageSquareWarning },
   { id: 'history', label: 'Scan History', icon: History },
-  { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3 },
-  { id: 'threat-analysis', label: 'Threat Analysis', icon: ShieldAlert },
-  { id: 'help', label: 'Help & Resources', icon: BookOpen },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'reports', label: 'Reports', icon: FileText },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'help', label: 'Help', icon: HelpCircle },
 ]
 
 /**
- * Compact enterprise left sidebar (desktop static, mobile slide-over drawer).
+ * Compact dark-mode (#0F172A) SaaS sidebar with responsive mobile drawer.
  */
 export default function Sidebar({
   activePage,
   onNavigate,
+  onGoHome,
   mobileOpen,
   onCloseMobile,
 }) {
@@ -42,13 +45,13 @@ export default function Sidebar({
               onNavigate(item.id)
               onCloseMobile?.()
             }}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-medium transition-colors duration-150 ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors duration-150 ${
               isActive
-                ? 'bg-blue-600/15 text-blue-400 ring-1 ring-blue-500/30'
-                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                ? 'bg-[#3B82F6]/15 text-[#F1F5F9] ring-1 ring-[#3B82F6]/40'
+                : 'text-[#94A3B8] hover:bg-[#172338] hover:text-[#F1F5F9]'
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#3B82F6]' : ''}`} />
             <span>{item.label}</span>
           </button>
         )
@@ -59,24 +62,30 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800/90 bg-[#0c121e] lg:flex">
-        <div className="flex h-14 items-center gap-2.5 border-b border-slate-800/90 px-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600/20 ring-1 ring-blue-500/40">
-            <ShieldCheck className="h-4 w-4 text-blue-400" />
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#263449] bg-[#0F172A] lg:flex">
+        <button
+          type="button"
+          onClick={onGoHome}
+          className="flex h-14 w-full items-center gap-2.5 border-b border-[#263449] px-4 text-left transition-colors duration-150 hover:bg-[#172338]/70"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#3B82F6]/30 bg-[#3B82F6]/15">
+            <ShieldCheck className="h-4 w-4 text-[#3B82F6]" />
           </div>
           <div>
-            <span className="text-sm font-bold tracking-tight text-white">
-              ScamShield <span className="text-blue-400">AI</span>
+            <span className="text-sm font-bold tracking-tight text-[#F1F5F9]">
+              ScamShield <span className="text-[#3B82F6]">AI</span>
             </span>
-            <p className="text-[10px] text-slate-400">Security Inspection Console</p>
+            <p className="text-[10px] text-[#94A3B8]">Security Console</p>
           </div>
-        </div>
+        </button>
 
         <div className="flex-1 overflow-y-auto">{renderLinks()}</div>
 
-        <div className="border-t border-slate-800/90 p-4 text-[11px] text-slate-500">
-          <p className="font-medium text-slate-400">Defensive Read-Only Engine</p>
-          <p className="mt-0.5">URLs are never executed or clicked as a user.</p>
+        <div className="border-t border-[#263449] p-4 text-[11px] text-[#94A3B8]">
+          <p className="font-medium text-[#F1F5F9]">Defensive Read-Only Engine</p>
+          <p className="mt-0.5 leading-relaxed">
+            URLs are analyzed safely without executing or opening links.
+          </p>
         </div>
       </aside>
 
@@ -84,21 +93,28 @@ export default function Sidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-[#0B1120]/80 backdrop-blur-xs"
             onClick={onCloseMobile}
             aria-hidden="true"
           />
-          <aside className="relative z-10 flex w-64 flex-col border-r border-slate-800 bg-[#0c121e]">
-            <div className="flex h-14 items-center justify-between border-b border-slate-800 px-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-blue-400" />
-                <span className="text-sm font-bold text-white">ScamShield AI</span>
-              </div>
+          <aside className="relative z-10 flex w-64 flex-col border-r border-[#263449] bg-[#0F172A] shadow-xl">
+            <div className="flex h-14 items-center justify-between border-b border-[#263449] px-4">
+              <button
+                type="button"
+                onClick={() => {
+                  onGoHome()
+                  onCloseMobile?.()
+                }}
+                className="flex items-center gap-2"
+              >
+                <ShieldCheck className="h-4 w-4 text-[#3B82F6]" />
+                <span className="text-sm font-bold text-[#F1F5F9]">ScamShield AI</span>
+              </button>
               <button
                 type="button"
                 onClick={onCloseMobile}
                 aria-label="Close navigation menu"
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="rounded-lg p-1 text-[#94A3B8] transition-colors duration-150 hover:bg-[#172338] hover:text-[#F1F5F9]"
               >
                 <X className="h-4 w-4" />
               </button>

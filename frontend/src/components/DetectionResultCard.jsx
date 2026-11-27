@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -18,15 +18,21 @@ import {
   Cpu,
   Languages,
   Download,
+  FileText,
 } from 'lucide-react'
-import { downloadScanReport } from '../services/api.js'
 import {
   EmptyState,
   LoadingState,
   RiskScoreDisplay,
   StatusBadge,
 } from './ui/StatusPrimitives.jsx'
-import TrackerFindingCard from './TrackerFindingCard.jsx'
+import { downloadScanReport } from '../services/api.js'
+
+const LANG_OPTIONS = [
+  { id: 'en', label: 'English' },
+  { id: 'hi', label: 'हिंदी' },
+  { id: 'hinglish', label: 'Hinglish' },
+]
 
 function formatTimestamp(isoString) {
   if (!isoString) return ''
@@ -42,10 +48,10 @@ function formatTimestamp(isoString) {
 
 function FindingCategorySection({ title, icon: Icon, items, emptyLabel = 'Not detected' }) {
   return (
-    <div className="rounded-lg border border-slate-800/90 bg-[#090d16] p-3.5">
+    <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-200">
-          <Icon className="h-3.5 w-3.5 text-blue-400" />
+        <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#F1F5F9]">
+          <Icon className="h-3.5 w-3.5 text-[#3B82F6]" />
           {title}
         </span>
         {items.length === 0 && <StatusBadge label={emptyLabel} />}
@@ -56,13 +62,13 @@ function FindingCategorySection({ title, icon: Icon, items, emptyLabel = 'Not de
           {items.map((item, idx) => (
             <div
               key={`${item.rule_id}-${idx}`}
-              className="rounded-md border border-slate-800 bg-[#0f1623] p-2.5 text-xs"
+              className="rounded-md border border-[#263449] bg-[#111C30] p-2.5 text-xs"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold text-slate-100">{item.rule_name}</span>
+                <span className="font-semibold text-[#F1F5F9]">{item.rule_name}</span>
                 <div className="flex items-center gap-1.5">
                   {item.score_contribution > 0 && (
-                    <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-300">
+                    <span className="rounded border border-[#F59E0B]/35 bg-[#F59E0B]/12 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#FCD34D]">
                       +{item.score_contribution} pts
                     </span>
                   )}
@@ -70,11 +76,11 @@ function FindingCategorySection({ title, icon: Icon, items, emptyLabel = 'Not de
                 </div>
               </div>
               {item.evidence && (
-                <p className="mt-1 break-all font-mono text-[11px] text-slate-400">
+                <p className="mt-1 break-all font-mono text-[11px] text-[#94A3B8]">
                   {item.evidence}
                 </p>
               )}
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
+              <p className="mt-1 text-[11px] leading-relaxed text-[#94A3B8]">
                 {item.explanation}
               </p>
             </div>
@@ -86,34 +92,40 @@ function FindingCategorySection({ title, icon: Icon, items, emptyLabel = 'Not de
 }
 
 /**
- * Structured enterprise DetectionResultCard for URL, Message, and Image OCR scans.
+ * Refined dark-mode DetectionResultCard with clear visual hierarchy and expandable technical details.
  */
-const LANG_OPTIONS = [
-  { id: 'en', label: 'English' },
-  { id: 'hi', label: 'हिंदी' },
-  { id: 'hinglish', label: 'Hinglish' },
-]
-
 export default function DetectionResultCard({
   scanResult,
   isScanning,
   apiError,
   activeMode,
+  defaultLanguage = 'en',
+  defaultExpandTechnical = false,
   onReviewExtractedText,
-  onOpenThreatAnalysis,
+  onOpenReport,
+  onToast,
 }) {
-  const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(true)
-  const [selectedLang, setSelectedLang] = useState('en')
+  const [selectedLang, setSelectedLang] = useState(defaultLanguage)
+  const [showTechnical, setShowTechnical] = useState(defaultExpandTechnical)
+  const [showUrls, setShowUrls] = useState(false)
+
+  useEffect(() => {
+    setSelectedLang(defaultLanguage)
+  }, [defaultLanguage])
+
+  useEffect(() => {
+    setShowTechnical(defaultExpandTechnical)
+  }, [defaultExpandTechnical, scanResult?.scanId])
 
   if (isScanning) {
     return (
       <LoadingState
         message={
           activeMode === 'url'
-            ? 'Analyzing URL structure & security signals...'
-            : 'Extracting text and inspecting detected URLs...'
+            ? 'Analyzing URL structure and defensive signals...'
+            : 'Inspecting message and embedded links...'
         }
-        subtext="Links are analyzed defensively and are never clicked or executed."
+        subtext="Read-only evaluation in progress; submitted links are never executed."
       />
     )
   }
@@ -122,13 +134,13 @@ export default function DetectionResultCard({
     return (
       <div
         role="alert"
-        className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4"
+        className="rounded-[10px] border border-[#EF4444]/40 bg-[#1F1218] p-4"
       >
         <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
           <div>
-            <h3 className="text-sm font-semibold text-rose-200">Scan Error</h3>
-            <p className="mt-1 text-xs leading-relaxed text-rose-200/90">{apiError}</p>
+            <h3 className="text-sm font-semibold text-[#FCA5A5]">Scan Error</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#FCA5A5]/90">{apiError}</p>
           </div>
         </div>
       </div>
@@ -142,7 +154,7 @@ export default function DetectionResultCard({
         title="Ready to Inspect"
         description={
           activeMode === 'url'
-            ? 'Submit a URL above to evaluate phishing, redirect, file-extension, and tracker signals.'
+            ? 'Enter a URL above to evaluate phishing, redirect, file-extension, and ML signals.'
             : 'Paste a message or upload a screenshot above to extract and analyze embedded URLs.'
         }
       />
@@ -151,25 +163,40 @@ export default function DetectionResultCard({
 
   const isUrlResult = scanResult.scanType === 'url'
   const isImageResult = scanResult.scanType === 'message-image'
-  const hasScore = scanResult.riskScore !== null && scanResult.riskScore !== undefined
   const domainIntel = scanResult.domainIntelligence
   const localizedBundle =
     scanResult.multilingualExplanations?.[selectedLang] ||
     scanResult.multilingualExplanations?.en ||
     null
 
+  const handleExport = async (format) => {
+    if (!scanResult.scanId) return
+    try {
+      await downloadScanReport(scanResult.scanId, format)
+      onToast?.({
+        type: 'success',
+        message: `Downloaded ${format.toUpperCase()} report for Scan #${scanResult.scanId}.`,
+      })
+    } catch (err) {
+      onToast?.({
+        type: 'error',
+        message: err.message || `Failed to export ${format.toUpperCase()} report.`,
+      })
+    }
+  }
+
   return (
-    <div className="space-y-4 rounded-xl border border-slate-800/90 bg-[#0f1623] p-5 shadow-lg shadow-black/20 sm:p-6">
-      {/* Header metadata row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/90 pb-3.5">
+    <div className="space-y-4 rounded-[10px] border border-[#263449] bg-[#111C30] p-5 sm:p-6">
+      {/* Header metadata + Export + Language switcher */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#263449] pb-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-[#090d16] px-2.5 py-1 text-xs font-medium text-slate-200">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-[#263449] bg-[#172338] px-2.5 py-1 text-xs font-semibold text-[#F1F5F9]">
             {isUrlResult ? (
-              <Link2 className="h-3.5 w-3.5 text-blue-400" />
+              <Link2 className="h-3.5 w-3.5 text-[#3B82F6]" />
             ) : isImageResult ? (
-              <ImageIcon className="h-3.5 w-3.5 text-blue-400" />
+              <ImageIcon className="h-3.5 w-3.5 text-[#3B82F6]" />
             ) : (
-              <MessageSquareWarning className="h-3.5 w-3.5 text-blue-400" />
+              <MessageSquareWarning className="h-3.5 w-3.5 text-[#3B82F6]" />
             )}
             {isUrlResult ? 'URL Scan' : isImageResult ? 'Image OCR Scan' : 'Message Scan'}
           </span>
@@ -177,23 +204,22 @@ export default function DetectionResultCard({
           <StatusBadge label={scanResult.reputationStatus} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-          {/* Instant Language Selector (no re-scan) */}
+        <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#94A3B8]">
           <div
             role="group"
             aria-label="Explanation language"
-            className="inline-flex items-center gap-1 rounded-md border border-slate-800 bg-[#090d16] p-0.5"
+            className="inline-flex items-center gap-1 rounded-md border border-[#263449] bg-[#0B1120] p-0.5"
           >
-            <Languages className="ml-1.5 h-3.5 w-3.5 text-slate-400" />
+            <Languages className="ml-1.5 h-3.5 w-3.5 text-[#94A3B8]" />
             {LANG_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
                 onClick={() => setSelectedLang(opt.id)}
-                className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors duration-150 ${
                   selectedLang === opt.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#3B82F6] text-white'
+                    : 'text-[#94A3B8] hover:text-[#F1F5F9]'
                 }`}
               >
                 {opt.label}
@@ -203,18 +229,28 @@ export default function DetectionResultCard({
 
           {scanResult.scanId && (
             <div className="inline-flex items-center gap-1.5">
+              {onOpenReport && (
+                <button
+                  type="button"
+                  onClick={() => onOpenReport(scanResult.scanId)}
+                  className="inline-flex items-center gap-1 rounded-md border border-[#263449] bg-[#172338] px-2.5 py-1 text-[11px] font-semibold text-[#F1F5F9] transition-colors duration-150 hover:border-[#3B82F6]/50"
+                >
+                  <FileText className="h-3 w-3 text-[#3B82F6]" />
+                  Report
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => downloadScanReport(scanResult.scanId, 'pdf')}
-                className="inline-flex items-center gap-1 rounded-md border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-[11px] font-medium text-blue-300 hover:bg-blue-500/20"
+                onClick={() => handleExport('pdf')}
+                className="inline-flex items-center gap-1 rounded-md border border-[#3B82F6]/35 bg-[#3B82F6]/12 px-2.5 py-1 text-[11px] font-semibold text-[#93C5FD] transition-colors duration-150 hover:bg-[#3B82F6]/20"
               >
                 <Download className="h-3 w-3" />
                 PDF
               </button>
               <button
                 type="button"
-                onClick={() => downloadScanReport(scanResult.scanId, 'json')}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-[#090d16] px-2 py-1 text-[11px] font-medium text-slate-300 hover:border-blue-500/40"
+                onClick={() => handleExport('json')}
+                className="inline-flex items-center gap-1 rounded-md border border-[#263449] bg-[#172338] px-2.5 py-1 text-[11px] font-semibold text-[#F1F5F9] transition-colors duration-150 hover:border-[#3B82F6]/50"
               >
                 <Download className="h-3 w-3" />
                 JSON
@@ -223,255 +259,187 @@ export default function DetectionResultCard({
           )}
 
           {scanResult.scannedAt && (
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-slate-500" />
+            <span className="inline-flex items-center gap-1 text-[11px] text-[#94A3B8]">
+              <Clock className="h-3 w-3" />
               {formatTimestamp(scanResult.scannedAt)}
             </span>
           )}
-          {onOpenThreatAnalysis && hasScore && (
-            <button
-              type="button"
-              onClick={onOpenThreatAnalysis}
-              className="text-xs font-medium text-blue-400 hover:text-blue-300"
-            >
-              Open Threat Analysis →
-            </button>
+        </div>
+      </div>
+
+      {/* Primary Classification & Score Summary */}
+      <div className="grid gap-4 rounded-lg border border-[#263449] bg-[#0B1120] p-4 sm:grid-cols-3 sm:items-center">
+        <div className="sm:col-span-1">
+          <RiskScoreDisplay score={scanResult.riskScore} level={scanResult.riskLevel} />
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge label={scanResult.riskLevel} size="md" />
+          </div>
+          <p className="text-xs leading-relaxed text-[#F1F5F9]">
+            {localizedBundle?.summary || scanResult.inspectionNote}
+          </p>
+          {scanResult.explanation && scanResult.explanation !== scanResult.inspectionNote && (
+            <p className="text-xs leading-relaxed text-[#94A3B8]">{scanResult.explanation}</p>
           )}
         </div>
       </div>
 
-      {/* OCR Extracted Text Panel */}
+      {/* OCR Extracted Text Review */}
       {isImageResult && (
-        <div className="space-y-2.5 rounded-lg border border-slate-800 bg-[#090d16] p-4">
+        <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <span className="font-semibold text-[#F1F5F9]">
               OCR Extracted Text
-            </h3>
-            <div className="flex items-center gap-2">
               {scanResult.ocrConfidence !== null && (
-                <span className="rounded border border-slate-700 bg-[#131c2e] px-2 py-0.5 text-[11px] text-slate-300">
-                  Confidence: {Math.round(scanResult.ocrConfidence * 100)}%
+                <span className="ml-2 font-normal text-[#94A3B8]">
+                  ({Math.round(scanResult.ocrConfidence * 100)}% confidence)
                 </span>
               )}
-              {scanResult.extractedText && onReviewExtractedText && (
-                <button
-                  type="button"
-                  onClick={() => onReviewExtractedText(scanResult.extractedText)}
-                  className="inline-flex items-center gap-1 rounded border border-blue-500/40 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-medium text-blue-300 hover:bg-blue-500/20"
-                >
-                  <Edit3 className="h-3 w-3" />
-                  Edit &amp; Re-scan
-                </button>
-              )}
-            </div>
-          </div>
-
-          {scanResult.lowOcrConfidenceWarning && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-xs text-amber-200">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-              <span>{scanResult.lowOcrConfidenceWarning}</span>
-            </div>
-          )}
-
-          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md border border-slate-800 bg-[#0f1623] p-3 font-mono text-xs text-slate-200">
-            {scanResult.extractedText || '(No readable text detected in image)'}
-          </pre>
-        </div>
-      )}
-
-      {/* Score & Assessment Card */}
-      <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-[200px] flex-1">
-            <RiskScoreDisplay
-              score={scanResult.riskScore}
-              level={scanResult.riskLevel}
-              label={isUrlResult ? 'Combined Risk Score' : 'Overall URL-Based Risk Score'}
-            />
-            {scanResult.ruleScore !== null &&
-              scanResult.ruleScore !== undefined &&
-              scanResult.mlAnalysis?.score_contribution > 0 && (
-                <p className="mt-1.5 text-[11px] text-slate-400">
-                  Breakdown: Rule-based ({scanResult.ruleScore}) + ML contribution (+
-                  {scanResult.mlAnalysis.score_contribution})
-                </p>
-              )}
-          </div>
-          <StatusBadge label={scanResult.riskLevel} size="md" />
-        </div>
-
-        <div className="mt-3 space-y-1 text-[11px] text-slate-400">
-          {localizedBundle?.summary && (
-            <p className="text-xs font-medium text-slate-200">{localizedBundle.summary}</p>
-          )}
-          {scanResult.inspectionNote && (
-            <p>
-              <strong className="text-slate-300">Analysis Mode:</strong>{' '}
-              {scanResult.inspectionNote}
-            </p>
-          )}
-          {scanResult.completedChecks?.length > 0 && (
-            <p>
-              <strong className="text-slate-300">Completed Checks:</strong>{' '}
-              {scanResult.completedChecks.join(' • ')}
-            </p>
-          )}
-          {scanResult.blockedDestinations?.length > 0 && (
-            <p className="text-amber-300">
-              <strong>Blocked for Safety:</strong>{' '}
-              {scanResult.blockedDestinations.join(', ')}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* ML Analysis Section */}
-      {scanResult.mlAnalysis && (
-        <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-              <Cpu className="h-3.5 w-3.5 text-blue-400" />
-              ML Analysis
             </span>
-            <StatusBadge
-              label={
-                scanResult.mlAnalysis.available
-                  ? scanResult.mlAnalysis.prediction === 'Legitimate'
-                    ? 'No strong indicators detected'
-                    : scanResult.mlAnalysis.prediction
-                  : 'Check unavailable'
-              }
-            />
+            {scanResult.extractedText && onReviewExtractedText && (
+              <button
+                type="button"
+                onClick={() => onReviewExtractedText(scanResult.extractedText)}
+                className="inline-flex items-center gap-1 font-semibold text-[#3B82F6] hover:text-[#60A5FA]"
+              >
+                <Edit3 className="h-3 w-3" />
+                Edit as Text
+              </button>
+            )}
           </div>
-
-          <div className="mt-2.5 grid gap-2 text-xs sm:grid-cols-3">
-            <div className="rounded border border-slate-800 bg-[#0f1623] p-2.5">
-              <p className="text-[10px] uppercase text-slate-500">ML Prediction</p>
-              <p className="mt-0.5 font-semibold text-slate-100">
-                {scanResult.mlAnalysis.prediction}
-              </p>
-            </div>
-            <div className="rounded border border-slate-800 bg-[#0f1623] p-2.5">
-              <p className="text-[10px] uppercase text-slate-500">Calibrated Confidence</p>
-              <p className="mt-0.5 font-mono font-semibold text-slate-100">
-                {scanResult.mlAnalysis.calibrated &&
-                scanResult.mlAnalysis.confidence !== null
-                  ? `${Math.round(scanResult.mlAnalysis.confidence * 100)}%`
-                  : 'Unavailable'}
-              </p>
-            </div>
-            <div className="rounded border border-slate-800 bg-[#0f1623] p-2.5">
-              <p className="text-[10px] uppercase text-slate-500">Model Version</p>
-              <p className="mt-0.5 font-mono text-slate-200">
-                {scanResult.mlAnalysis.model_version || 'Unavailable'}
-              </p>
-            </div>
-          </div>
-
-          {scanResult.mlAnalysis.error && (
-            <p className="mt-2 text-[11px] text-amber-300">{scanResult.mlAnalysis.error}</p>
-          )}
-          <p className="mt-2 text-[11px] text-slate-400">
-            {scanResult.mlAnalysis.disclaimer}
+          <p className="mt-1.5 whitespace-pre-wrap break-words font-mono text-[11px] text-[#94A3B8]">
+            {scanResult.extractedText || 'No readable text was detected in the uploaded image.'}
           </p>
         </div>
       )}
 
-      {/* Individual URL results for Message & Image OCR */}
-      {!isUrlResult && scanResult.urlResults.length > 0 && (
-        <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Detected URLs ({scanResult.urlResults.length})
+      {/* Detected Indicators & Recommendations */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#F1F5F9]">
+            Detected Indicators
           </h3>
-          <ul className="mt-2.5 space-y-2">
-            {scanResult.urlResults.map((item, idx) => (
-              <li
-                key={`${item.url}-${idx}`}
-                className="rounded-md border border-slate-800 bg-[#0f1623] p-3"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="break-all font-mono text-xs text-slate-200">
-                    {item.url}
-                  </span>
-                  <StatusBadge label={`${item.risk_level} (${item.risk_score}/100)`} />
-                </div>
-                {item.error && <p className="mt-1 text-xs text-rose-300">{item.error}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Triggered Rules */}
-      {hasScore && (
-        <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Triggered Rules &amp; Score Contributions
-          </h3>
-          {scanResult.detectedRules.length === 0 ? (
-            <p className="mt-2 flex items-center gap-2 text-xs text-emerald-300">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              No strong malicious indicators detected in available checks.
+          {scanResult.detectedIndicators.length === 0 ? (
+            <p className="mt-2.5 flex items-center gap-2 text-xs text-[#86EFAC]">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#22C55E]" />
+              No strong phishing or malware indicators detected in completed checks.
             </p>
           ) : (
             <ul className="mt-2.5 space-y-2">
-              {scanResult.detectedRules.map((rule, idx) => (
+              {scanResult.detectedIndicators.map((ind, idx) => (
                 <li
-                  key={`${rule.rule_id}-${idx}`}
-                  className="rounded-md border border-slate-800 bg-[#0f1623] p-3 text-xs"
+                  key={`${ind}-${idx}`}
+                  className="rounded-md border border-[#263449] bg-[#111C30] p-2.5 text-xs"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-slate-100">{rule.rule_name}</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-amber-300">
-                        +{rule.score_contribution} pts
-                      </span>
-                      <StatusBadge label={rule.detection_status} />
-                    </div>
-                  </div>
-                  {rule.evidence && (
-                    <p className="mt-1 break-all font-mono text-[11px] text-slate-400">
-                      {rule.evidence}
+                  <p className="font-semibold text-[#F1F5F9]">{ind}</p>
+                  {(localizedBundle?.explanations?.[idx] || scanResult.explanations?.[idx]) && (
+                    <p className="mt-1 text-[11px] leading-relaxed text-[#94A3B8]">
+                      {localizedBundle?.explanations?.[idx] || scanResult.explanations[idx]}
                     </p>
                   )}
-                  <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
-                    {localizedBundle?.explanations?.[idx] || rule.explanation}
-                  </p>
                 </li>
               ))}
             </ul>
           )}
         </div>
-      )}
 
-      {/* Expandable Detailed Breakdown */}
-      {hasScore && (
-        <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-          <button
-            type="button"
-            onClick={() => setShowDetailedBreakdown((prev) => !prev)}
-            className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wider text-slate-300"
-          >
-            <span>Detailed Findings (Trackers, Phishing, Malware, Redirects, Domain &amp; Files)</span>
-            {showDetailedBreakdown ? (
-              <ChevronUp className="h-4 w-4 text-slate-400" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            )}
-          </button>
+        <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#F1F5F9]">
+            Recommended Next Steps
+          </h3>
+          <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-xs text-[#94A3B8]">
+            {(localizedBundle?.recommendations?.length
+              ? localizedBundle.recommendations
+              : scanResult.recommendations
+            ).map((rec, idx) => (
+              <li key={`${rec}-${idx}`} className="leading-relaxed">
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
-          {showDetailedBreakdown && (
-            <div className="mt-3 space-y-2.5">
+      {/* Expandable Technical Details */}
+      <div className="rounded-lg border border-[#263449] bg-[#0B1120]">
+        <button
+          type="button"
+          onClick={() => setShowTechnical((v) => !v)}
+          aria-expanded={showTechnical}
+          className="flex w-full items-center justify-between px-4 py-3 text-left text-xs font-semibold text-[#F1F5F9] transition-colors duration-150 hover:bg-[#172338]"
+        >
+          <span>Technical Analysis Details (Rules, ML &amp; Threat Intelligence)</span>
+          {showTechnical ? (
+            <ChevronUp className="h-4 w-4 text-[#94A3B8]" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-[#94A3B8]" />
+          )}
+        </button>
+
+        {showTechnical && (
+          <div className="space-y-3 border-t border-[#263449] bg-[#111C30] p-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-[#F1F5F9]">
+                    <Cpu className="h-3.5 w-3.5 text-[#3B82F6]" />
+                    Machine Learning Layer
+                  </span>
+                  <span className="font-mono text-[11px] text-[#94A3B8]">
+                    {scanResult.mlAnalysis?.available ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                {scanResult.mlAnalysis?.available ? (
+                  <p className="mt-2 text-[#F1F5F9]">
+                    Prediction: <strong>{scanResult.mlAnalysis.prediction}</strong>{' '}
+                    {scanResult.mlAnalysis.confidence !== null && (
+                      <span className="text-[#94A3B8]">
+                        ({Math.round(scanResult.mlAnalysis.confidence * 100)}% confidence)
+                      </span>
+                    )}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[#94A3B8]">
+                    ML model unavailable for this scan; rule-based scoring remains active.
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-[#F1F5F9]">
+                    <Globe className="h-3.5 w-3.5 text-[#3B82F6]" />
+                    Threat Intelligence
+                  </span>
+                  <StatusBadge label={scanResult.reputationStatus} />
+                </div>
+                <p className="mt-2 text-[#94A3B8]">
+                  Provider:{' '}
+                  <strong className="text-[#F1F5F9]">
+                    {domainIntel?.provider_name || 'unconfigured'}
+                  </strong>
+                  {domainIntel?.note ? ` — ${domainIntel.note}` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
               <FindingCategorySection
                 title="Phishing Indicators"
                 icon={ShieldAlert}
                 items={scanResult.phishingIndicators}
               />
               <FindingCategorySection
-                title="Malware Indicators"
+                title="Malware & Reputation"
                 icon={Bug}
                 items={scanResult.malwareIndicators}
-                emptyLabel="Check unavailable"
+                emptyLabel={
+                  scanResult.reputationStatus === 'Check unavailable'
+                    ? 'Check unavailable'
+                    : 'Not detected'
+                }
               />
               <FindingCategorySection
                 title="Redirect Indicators"
@@ -479,108 +447,49 @@ export default function DetectionResultCard({
                 items={scanResult.redirectIndicators}
               />
               <FindingCategorySection
-                title="File & Download Indicators"
+                title="Download & File Signals"
                 icon={FileWarning}
                 items={scanResult.fileDownloadIndicators}
               />
+            </div>
 
-              {/* Tracker Findings using TrackerFindingCard */}
-              <div className="rounded-lg border border-slate-800/90 bg-[#090d16] p-3.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-slate-200">
-                    Website Tracker Findings (Informational)
-                  </span>
-                  {scanResult.trackerIndicators.length === 0 && (
-                    <StatusBadge label="Not detected" />
-                  )}
-                </div>
-                {scanResult.trackerIndicators.length > 0 && (
-                  <div className="mt-2.5 space-y-2">
-                    {scanResult.trackerIndicators.map((t, idx) => (
-                      <TrackerFindingCard key={`${t.rule_id}-${idx}`} finding={t} />
+            {scanResult.urlResults.length > 0 && (
+              <div className="rounded-lg border border-[#263449] bg-[#0B1120] p-3.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowUrls((v) => !v)}
+                  className="flex w-full items-center justify-between font-semibold text-[#F1F5F9]"
+                >
+                  <span>Inspected URLs ({scanResult.urlResults.length})</span>
+                  {showUrls ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+                {showUrls && (
+                  <ul className="mt-2.5 space-y-2">
+                    {scanResult.urlResults.map((u, idx) => (
+                      <li
+                        key={`${u.url}-${idx}`}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded border border-[#263449] bg-[#111C30] p-2"
+                      >
+                        <span className="break-all font-mono text-[11px] text-[#F1F5F9]">
+                          {u.url}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] text-[#94A3B8]">
+                            {u.risk_score}/100
+                          </span>
+                          <StatusBadge label={u.risk_level} />
+                        </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
+            )}
+          </div>
+        )}
+      </div>
 
-              {domainIntel && (
-                <div className="rounded-lg border border-slate-800/90 bg-[#0f1623] p-3.5 text-xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-2 font-semibold text-slate-200">
-                      <Globe className="h-3.5 w-3.5 text-blue-400" />
-                      Domain Reputation &amp; Age
-                    </span>
-                    <StatusBadge label={domainIntel.reputation_status} />
-                  </div>
-                  <div className="mt-2 grid gap-1.5 text-[11px] text-slate-300 sm:grid-cols-2">
-                    <p>
-                      <span className="text-slate-500">Provider:</span>{' '}
-                      {domainIntel.provider_name}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Domain Age:</span>{' '}
-                      {domainIntel.domain_age_status}
-                    </p>
-                    {domainIntel.checked_at && (
-                      <p>
-                        <span className="text-slate-500">Checked:</span>{' '}
-                        {formatTimestamp(domainIntel.checked_at)}{' '}
-                        <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">
-                          {domainIntel.cached ? 'Cached' : 'Fresh'}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                  {domainIntel.provider_results?.length > 0 && (
-                    <ul className="mt-2 space-y-1.5 border-t border-slate-800 pt-2">
-                      {domainIntel.provider_results.map((pr, idx) => (
-                        <li
-                          key={`${pr.provider_name}-${idx}`}
-                          className="flex flex-wrap items-center justify-between gap-2 text-[11px]"
-                        >
-                          <span className="text-slate-200">
-                            {pr.provider_name} ({pr.threat_category})
-                          </span>
-                          <span className="text-slate-400">
-                            {pr.lookup_status} • {pr.cached ? 'Cached' : 'Fresh'}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {domainIntel.note && (
-                    <p className="mt-2 text-[11px] text-slate-400">{domainIntel.note}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Recommendations & Limitations */}
-      {(localizedBundle?.recommendations?.length > 0 || scanResult.recommendations.length > 0) && (
-        <div className="rounded-lg border border-slate-800 bg-[#090d16] p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Recommendations
-          </h3>
-          <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-slate-300">
-            {(localizedBundle?.recommendations?.length > 0
-              ? localizedBundle.recommendations
-              : scanResult.recommendations
-            ).map((rec, idx) => (
-              <li key={`${rec}-${idx}`}>{rec}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {scanResult.limitations?.length > 0 && (
-        <p className="text-[11px] leading-relaxed text-slate-400">
-          <strong className="text-slate-300">Limitations:</strong>{' '}
-          {scanResult.limitations.join(' ')}
-        </p>
-      )}
+      <p className="text-[11px] leading-relaxed text-[#94A3B8]">{scanResult.disclaimer}</p>
     </div>
   )
 }
